@@ -1,0 +1,19 @@
+{
+  "name": "ai-agent-ui-gripo",
+  "version": "1.0.2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.tsx --dts --format=esm,cjs --external react,react-dom --no-splitting --clean"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-icons": "^4.10.1"
+  },
+  "devDependencies": {
+    "tsup": "^7.0.0",
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}
