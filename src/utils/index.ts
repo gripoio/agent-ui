@@ -6,3 +6,4 @@ export const getHighlightedText = (text: string) => {
   );
   return withMentions.replace(/\n/g, "<br />");
 };
+/../

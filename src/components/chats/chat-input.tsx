@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
-import { getHighlightedText } from "../utils";
+import { getHighlightedText } from "../../utils";
 
 // Mock icons since we don't have react-icons
 const IoIosSend = () => (
@@ -28,11 +28,14 @@ type MentionItem = {
   pinnable: boolean;
 };
 
-type PinnedItem = {
+type Pinned = {
   label: string;
   value: string;
   pinnable: boolean;
 };
+
+type PinnedItem = Record<string, Pinned>; // or `Record<number, Pinned>` or `Record<unknown, Pinned>` if needed
+
 interface ChatInputProps {
   onSend: (text: string) => void;
   placeholder?: string;
@@ -41,7 +44,7 @@ interface ChatInputProps {
   disabled?: boolean;
   mentions?: MentionItem[]; // List of mentionable names
   onMentionSelect?: (type: string, value: string, label: string) => void;
-  pinnedItems?: PinnedItem[];
+  pinnedItems?: PinnedItem;
   onRemovePin?: (type: string) => void;
 }
 
@@ -123,11 +126,9 @@ export function ChatInput({
 const insertMention = useCallback(
   (mentionValue: string) => {
     if (mentionStart === null) return;
-    console.log("suggestion", suggestions)
-    console.log("mentionValue", mentionValue)
     const mentionItem = suggestions.find((s) => s.value === mentionValue);
     if (!mentionItem) return;
-    console.log("mentionItem", mentionItem);
+
     // 🔒 Handle pinnable mentions
 if (mentionItem.pinnable) {
   const beforeMention = text.substring(0, mentionStart);
@@ -239,10 +240,40 @@ if (mentionItem.pinnable) {
     }
   }, [text]);
 
-  console.log("pinnedItems", pinnedItems);
   return (
     <div className="tw-w-full tw-max-w-2xl tw-mx-auto tw-p-4">
       <div className="tw-relative">
+
+             <div className="tw-text-xs tw-text-gray-500 tw-flex tw-justify-between tw-w-full mb-1">
+              {pinnedItems &&
+                Object.entries(pinnedItems).map(([key, item]) => {
+                  if (!item.pinnable) return null; // 👈 Skip non-pinnable tags
+
+                  return (
+<span
+  key={key}
+  className="tw-group tw-relative tw-bg-blue-100 tw-text-blue-800 tw-text-xs tw-font-medium tw-pl-2 tw-pr-2 tw-py-0.5 tw-rounded-sm tw-inline-flex tw-items-center tw-transition-all tw-duration-300 tw-w-auto tw-max-w-fit hover:tw-pr-6"
+>
+  <span className="tw-whitespace-nowrap tw-overflow-hidden tw-text-ellipsis">
+    @{String(item.label)}
+  </span>
+
+  <button
+    onClick={() => onRemovePin?.(key)}
+    className="tw-absolute tw-top-1/2 tw-right-1 tw-translate-y-[-50%] tw-opacity-0 tw-scale-90 group-hover:tw-opacity-100 group-hover:tw-scale-100 tw-bg-blue-200/50  tw-text-red-500 hover:tw-bg-red-100 hover:tw-text-red-600 tw-text-xs tw-font-bold tw-rounded-full tw-w-4 tw-h-4 tw-flex tw-items-center tw-justify-center tw-transition-all tw-duration-300 tw-cursor-pointer tw-border-none"
+    aria-label={`Remove ${item.label} tag`}
+    title="Remove tag"
+  >
+    ×
+  </button>
+</span>
+
+
+
+
+                  );
+                })}
+            </div>
         {/* Main input container */}
         <div className="tw-border tw-border-gray-300 tw-rounded-lg tw-bg-white tw-shadow-sm ">
           {/* Text input area */}
@@ -295,29 +326,6 @@ if (mentionItem.pinnable) {
                 <FaMicrophone />
               </button>
             )}
-            <div className="tw-text-xs tw-text-gray-500 tw-flex tw-justify-between tw-w-full">
-              {pinnedItems &&
-                Object.entries(pinnedItems).map(([key, item]) => {
-                  if (!item.pinnable) return null; // 👈 Skip non-pinnable tags
-
-                  return (
-                    <span
-                      key={key}
-                      className="tw-group tw-bg-blue-100 tw-text-blue-800 tw-text-xs tw-font-medium tw-me-2 tw-px-2.5 tw-py-0.5 tw-rounded-sm tw-relative tw-inline-flex tw-items-center tw-gap-1 tw-transition-all tw-duration-200 hover:tw-bg-blue-200"
-                    >
-                      @{item.label}
-                      <button
-                        onClick={() => onRemovePin?.(key)}
-                        className="tw-opacity-0 tw-h-4 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-blue-600 tw-text-xs tw-font-bold tw-transition-all tw-duration-200 tw-bg-blue-200/50 hover:tw-bg-red-100 hover:tw-text-red-600 group-hover:tw-opacity-100 tw-cursor-pointer tw-border-none"
-                        aria-label={`Remove ${item.label} tag`}
-                        title="Remove tag"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  );
-                })}
-            </div>
           </div>
         </div>
 
