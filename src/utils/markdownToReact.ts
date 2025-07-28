@@ -204,21 +204,26 @@ function post(tree: Nodes, options: Readonly<Options>): ReactElement {
     );
   }
 
-  if (options.className) {
-    tree = {
-      type: 'element',
-      tagName: 'div',
-      properties: { className: options.className },
-      children:
-        tree.type === 'root' ? (tree.children as ElementContent[]) : [tree],
-    };
-  }
+ if (options.className) {
+  const elementChildren = tree.type === 'root' 
+    ? tree.children.filter((child): child is ElementContent => 
+        child.type !== 'doctype' // Filter out doctype and other root-only nodes
+      )
+    : [tree as ElementContent]; // Cast tree itself to ElementContent
+
+  tree = {
+    type: 'element',
+    tagName: 'div',
+    properties: { className: options.className },
+    children: elementChildren,
+  };
+}
 
   visit(tree, transform);
 
   return toJsxRuntime(tree, {
     Fragment,
-    components,
+    components: components as any,
     ignoreInvalidStyle: true,
     jsx,
     jsxs,

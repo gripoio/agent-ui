@@ -1,9 +1,9 @@
-// components/CodeBlock.tsx
 import { useState } from "react";
 import { IoCopyOutline } from "react-icons/io5";
 
 interface CodeBlockProps extends React.HTMLAttributes<HTMLElement> {
   children?: React.ReactNode;
+  node?: any; // 👈 added to avoid type error when passNode: true
 }
 
 export function CodeBlock({ children, className = "", ...props }: CodeBlockProps) {

@@ -280,7 +280,7 @@ if (mentionItem.pinnable) {
           <div className="tw-relative">
           <div
         className="tw-whitespace-pre-wrap tw-break-words tw-text-sm  tw-font-normal tw-p-3  tw-text-gray-900
-        tw-absolute tw-inset-0 tw-pointer-events-none tw-overflow-hidden"
+        tw-absolute tw-inset-0 tw-pointer-events-none tw-overflow-y-auto scrollbar-hide"
         dangerouslySetInnerHTML={{ __html: getHighlightedText(text) }}
       />
             <textarea
@@ -291,7 +291,7 @@ if (mentionItem.pinnable) {
               placeholder={placeholder}
               disabled={disabled}
             className=" ghost-textarea  tw-w-full tw-p-3    tw-resize-none tw-outline-none 
-               tw-text-sm  tw-max-h-32 tw-min-h-10
+               tw-text-sm  tw-max-h-32 
                tw-text-transparent tw-bg-transparent tw-caret-black
                placeholder:tw-text-gray-500 disabled:tw-bg-gray-100 
                disabled:tw-text-gray-500 tw-selection:bg-blue-200"
