@@ -19,7 +19,7 @@ export function CodeBlock({ children, className = "", ...props }: CodeBlockProps
     <div className="tw-relative tw-my-4">
       <pre
         className={`tw-overflow-x-auto tw-rounded-lg tw-p-4 tw-text-sm tw-font-mono 
-          tw-bg-gray-100 tw-text-gray-800 dark:tw-bg-gray-800 dark:tw-text-gray-100 
+          tw-bg-gray-200 tw-text-gray-900 tw-border tw-border-gray-200 
           ${className}`}
         {...props}
       >
@@ -29,10 +29,12 @@ export function CodeBlock({ children, className = "", ...props }: CodeBlockProps
       <button
         onClick={handleCopy}
         className="tw-absolute tw-top-2 tw-right-2 tw-flex tw-items-center tw-gap-1 
-                   tw-rounded-md tw-border tw-border-gray-300 dark:tw-border-gray-600 
-                   tw-bg-white dark:tw-bg-gray-700 
-                   tw-px-2 tw-py-1 tw-text-xs tw-text-gray-700 dark:tw-text-gray-200 
-                   hover:tw-bg-gray-200 dark:hover:tw-bg-gray-600 tw-transition"
+                   tw-rounded-md tw-border 
+                   tw-border-gray-300 tw-bg-white tw-text-gray-700
+                   tw-px-2 tw-py-1 tw-text-xs 
+                   hover:tw-bg-gray-100
+                   focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-blue-500 focus:tw-ring-offset-1
+                   tw-transition-colors tw-duration-200 tw-shadow-sm"
       >
         <IoCopyOutline className="tw-h-4 tw-w-4" />
         {copied ? "Copied!" : "Copy"}

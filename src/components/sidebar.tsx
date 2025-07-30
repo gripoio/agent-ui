@@ -1,5 +1,6 @@
-import { CiCirclePlus, CiChat1, CiMenuKebab } from "react-icons/ci";
 import { useState } from "react";
+import { CiCirclePlus, CiChat1, CiMenuKebab } from "react-icons/ci";
+import { RiSettings3Line } from "react-icons/ri";
 import {ChatUIButton} from "./button";
 
 type Chat = {
@@ -12,6 +13,8 @@ type ChatItemProps = {
   isActive: boolean;
   onSelect: (id: string) => void;
   onOptions: (id: string) => void;
+ 
+
 };
 
 function EmptyState() {
@@ -73,20 +76,25 @@ export function ChatSidebar({
   activeId,
   onSelectChat,
   onNewChat,
+  setShowModal,
 }: {
   chats: Chat[];
   activeId: string;
   onSelectChat: (id: string) => void;
   onNewChat?: () => void;
+   setShowModal: (modal:boolean) => void;
 }) {
   return (
     <aside className=" tw-border-r tw-border-gray-200 tw-h-full tw-flex tw-flex-col">
       {/* Header */}
       <div className="tw-p-4 tw-border-b tw-border-gray-100">
         <h2 className="tw-text-lg tw-font-semibold tw-text-gray-900 tw-mb-3">Conversations</h2>
-        <ChatUIButton onClick={onNewChat} className="tw-w-full tw-justify-center tw-border-none">
-          <CiCirclePlus className="tw-w-5 tw-h-5" />
-          <span className="tw-ml-2">New Chat</span>
+        <ChatUIButton 
+        className="tw-w-full"
+        onClick={onNewChat}
+        >
+          <CiCirclePlus  />
+         New Chat
         </ChatUIButton>
       </div>
 
@@ -113,6 +121,16 @@ export function ChatSidebar({
           </>
         )}
       </div>
+
+      <ChatUIButton
+      onClick={()=>setShowModal(true)}
+      className=""
+      variant="outline"
+      >
+        <RiSettings3Line size={18}/>
+        Setting
+      </ChatUIButton>
+      
     </aside>
   );
 }

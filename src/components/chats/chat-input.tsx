@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { getHighlightedText } from "../../utils";
 
-// Mock icons since we don't have react-icons
+// Mock icons
 const IoIosSend = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
@@ -24,7 +24,7 @@ const FaMicrophone = () => (
 type MentionItem = {
   label: string;
   value: string;
-  children?: MentionItem[]; // Optional nested categories
+  children?: MentionItem[];
   pinnable: boolean;
 };
 
@@ -34,7 +34,7 @@ type Pinned = {
   pinnable: boolean;
 };
 
-type PinnedItem = Record<string, Pinned>; // or `Record<number, Pinned>` or `Record<unknown, Pinned>` if needed
+type PinnedItem = Record<string, Pinned>;
 
 interface ChatInputProps {
   onSend: (text: string) => void;
@@ -42,13 +42,15 @@ interface ChatInputProps {
   showAttachmentButton?: boolean;
   showMicButton?: boolean;
   disabled?: boolean;
-  mentions?: MentionItem[]; // List of mentionable names
+  mentions?: MentionItem[];
   onMentionSelect?: (type: string, value: string, label: string) => void;
   pinnedItems?: PinnedItem;
   onRemovePin?: (type: string) => void;
 }
 
-export function ChatInput({
+
+
+export  function ChatInput({
   onSend,
   mentions = [],
   onMentionSelect,
@@ -61,13 +63,38 @@ export function ChatInput({
 }: ChatInputProps) {
   const [text, setText] = useState("");
   const [suggestions, setSuggestions] = useState<MentionItem[]>([]);
-
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
   const [mentionStart, setMentionStart] = useState<number | null>(null);
   const [cursorPosition, setCursorPosition] = useState(0);
+  
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const suggestionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Auto-resize textarea
+  const adjustTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    const overlay = overlayRef.current;
+    
+    if (textarea && overlay) {
+      textarea.style.height = 'auto';
+      const scrollHeight = Math.min(textarea.scrollHeight, 128); // max-height equivalent
+      textarea.style.height = `${scrollHeight}px`;
+      overlay.style.height = `${scrollHeight}px`;
+    }
+  }, []);
+
+  // Sync scroll between textarea and overlay
+  const syncScroll = useCallback(() => {
+    const textarea = textareaRef.current;
+    const overlay = overlayRef.current;
+    
+    if (textarea && overlay) {
+      overlay.scrollTop = textarea.scrollTop;
+      overlay.scrollLeft = textarea.scrollLeft;
+    }
+  }, []);
 
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -76,36 +103,42 @@ export function ChatInput({
 
     setText(value);
     setCursorPosition(cursorPos);
+    
+    // Adjust height and sync scroll
+    setTimeout(() => {
+      adjustTextareaHeight();
+      syncScroll();
+    }, 0);
 
-    // Check for mention trigger
     checkForMentions(value, cursorPos);
   };
 
-
+  // Handle scroll sync
+  const handleScroll = () => {
+    syncScroll();
+  };
 
   // Check for @ mentions
   const checkForMentions = (text: string, cursorPos: number) => {
-    // Find the last @ before cursor position
     let mentionIndex = -1;
+    
     for (let i = cursorPos - 1; i >= 0; i--) {
       if (text[i] === "@") {
-        // Check if this @ is at start or after a space
-        if (i === 0 || text[i - 1] === " ") {
+        if (i === 0 || text[i - 1] === " " || text[i - 1] === "\n") {
           mentionIndex = i;
           break;
         }
-      } else if (text[i] === " ") {
-        break; // Stop if we hit a space before finding @
+      } else if (text[i] === " " || text[i] === "\n") {
+        break;
       }
     }
 
     if (mentionIndex !== -1) {
       const query = text.substring(mentionIndex + 1, cursorPos);
 
-      // Only show suggestions if query doesn't contain spaces
-      if (!query.includes(" ")) {
-        const filtered = mentions.filter((name) =>
-          name?.value?.toLowerCase().startsWith(query.toLowerCase())
+      if (!query.includes(" ") && !query.includes("\n")) {
+        const filtered = mentions.filter((item) =>
+          item?.label?.toLowerCase().includes(query.toLowerCase())
         );
 
         if (filtered.length > 0) {
@@ -122,69 +155,74 @@ export function ChatInput({
     setMentionStart(null);
   };
 
+  // Scroll suggestion into view
+  const scrollSuggestionIntoView = (index: number) => {
+    const suggestionElement = suggestionRefs.current[index];
+    if (suggestionElement) {
+      suggestionElement.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+      });
+    }
+  };
+
   // Insert mention
-const insertMention = useCallback(
-  (mentionValue: string) => {
-    if (mentionStart === null) return;
-    const mentionItem = suggestions.find((s) => s.value === mentionValue);
-    if (!mentionItem) return;
+  const insertMention = useCallback(
+    (mentionValue: string) => {
+      if (mentionStart === null) return;
+      
+      const mentionItem = suggestions.find((s) => s.value === mentionValue);
+      if (!mentionItem) return;
 
-    // 🔒 Handle pinnable mentions
-if (mentionItem.pinnable) {
-  const beforeMention = text.substring(0, mentionStart);
-  const afterCursor = text.substring(cursorPosition);
+      // Handle pinnable mentions
+      if (mentionItem.pinnable) {
+        const beforeMention = text.substring(0, mentionStart);
+        const afterCursor = text.substring(cursorPosition);
+        const cleanedText = beforeMention + afterCursor;
 
-  // Find the mention query between @ and cursor
-  const typedMention = text.substring(mentionStart + 1, cursorPosition);
+        setText(cleanedText);
+        setShowSuggestions(false);
+        setMentionStart(null);
 
-  // Replace `@typedMention` with nothing
-  const cleanedText = beforeMention + afterCursor;
+        if (onMentionSelect) {
+          onMentionSelect("cluster", mentionItem.value, mentionItem.label);
+        }
 
-  setText(cleanedText); // ⬅️ This ensures @mention disappears from the div too
-  setShowSuggestions(false);
-  setMentionStart(null);
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(mentionStart, mentionStart);
+            adjustTextareaHeight();
+          }
+        }, 0);
 
-  if (onMentionSelect) {
-    onMentionSelect("cluster", mentionItem.value, mentionItem.label);
-  }
-
-  setTimeout(() => {
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(mentionStart, mentionStart);
-    }
-  }, 0);
-
-  return;
-}
-
-
-    // ✏️ Insert mention normally
-    const beforeMention = text.substring(0, mentionStart);
-    const afterCursor = text.substring(cursorPosition);
-    const newText = `${beforeMention}@${mentionItem.label} ${afterCursor}`;
-    const newCursorPos = beforeMention.length + mentionItem.label.length + 2; // `@` + label + space
-
-    setText(newText);
-    setShowSuggestions(false);
-    setMentionStart(null);
-
-    // 🔔 Callback for non-pinnable mentions
-    if (onMentionSelect) {
-      onMentionSelect("cluster", mentionItem.value, mentionItem.label);
-    }
-
-    // ⌨️ Reset cursor
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        return;
       }
-    }, 0);
-  },
-  [text, cursorPosition, mentionStart, suggestions, onMentionSelect]
-);
 
+      // Insert mention normally
+      const beforeMention = text.substring(0, mentionStart);
+      const afterCursor = text.substring(cursorPosition);
+      const newText = `${beforeMention}@${mentionItem.label} ${afterCursor}`;
+      const newCursorPos = beforeMention.length + mentionItem.label.length + 2;
+
+      setText(newText);
+      setShowSuggestions(false);
+      setMentionStart(null);
+
+      if (onMentionSelect) {
+        onMentionSelect("cluster", mentionItem.value, mentionItem.label);
+      }
+
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+          adjustTextareaHeight();
+        }
+      }, 0);
+    },
+    [text, cursorPosition, mentionStart, suggestions, onMentionSelect, adjustTextareaHeight]
+  );
 
   // Handle keyboard events
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -192,22 +230,30 @@ if (mentionItem.pinnable) {
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setActiveSuggestionIndex((prev) =>
-            prev < suggestions.length - 1 ? prev + 1 : 0
-          );
+          const nextIndex = activeSuggestionIndex < suggestions.length - 1 
+            ? activeSuggestionIndex + 1 
+            : 0;
+          setActiveSuggestionIndex(nextIndex);
+          scrollSuggestionIntoView(nextIndex);
           break;
+          
         case "ArrowUp":
           e.preventDefault();
-          setActiveSuggestionIndex((prev) =>
-            prev > 0 ? prev - 1 : suggestions.length - 1
-          );
+          const prevIndex = activeSuggestionIndex > 0 
+            ? activeSuggestionIndex - 1 
+            : suggestions.length - 1;
+          setActiveSuggestionIndex(prevIndex);
+          scrollSuggestionIntoView(prevIndex);
           break;
+          
         case "Enter":
         case "Tab":
           e.preventDefault();
           insertMention(suggestions[activeSuggestionIndex].value);
           break;
+          
         case "Escape":
+          e.preventDefault();
           setShowSuggestions(false);
           break;
       }
@@ -228,81 +274,93 @@ if (mentionItem.pinnable) {
       setText("");
       setShowSuggestions(false);
       setMentionStart(null);
+      setTimeout(adjustTextareaHeight, 0);
     }
   };
 
-  // Auto-resize textarea
+  // Initialize refs for suggestions
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height =
-        Math.min(textareaRef.current.scrollHeight, 120) + "px";
-    }
-  }, [text]);
+    suggestionRefs.current = suggestionRefs.current.slice(0, suggestions.length);
+  }, [suggestions.length]);
+
+  // Adjust height on mount
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [adjustTextareaHeight]);
 
   return (
     <div className="tw-w-full tw-max-w-2xl tw-mx-auto tw-p-4">
       <div className="tw-relative">
+        {/* Pinned Items */}
+        {pinnedItems && Object.keys(pinnedItems).length > 0 && (
+          <div className="tw-text-xs tw-text-gray-500 tw-flex tw-flex-wrap tw-gap-2 tw-mb-2">
+            {Object.entries(pinnedItems).map(([key, item]) => {
+              if (!item.pinnable) return null;
 
-             <div className="tw-text-xs tw-text-gray-500 tw-flex tw-justify-between tw-w-full mb-1">
-              {pinnedItems &&
-                Object.entries(pinnedItems).map(([key, item]) => {
-                  if (!item.pinnable) return null; // 👈 Skip non-pinnable tags
+              return (
+                <span
+                  key={key}
+                  className="tw-group tw-relative tw-bg-blue-100 tw-text-blue-800 tw-text-xs tw-font-medium tw-px-2 tw-py-1 tw-rounded-md tw-inline-flex tw-items-center tw-transition-all tw-duration-200 hover:tw-bg-blue-200"
+                >
+                  <span className="tw-mr-1">@{item.label}</span>
+                  <button
+                    onClick={() => onRemovePin?.(key)}
+                    className="tw-opacity-0 group-hover:tw-opacity-100 tw-bg-red-100 hover:tw-bg-red-200 tw-text-red-600 tw-text-xs tw-rounded-full tw-w-4 tw-h-4 tw-flex tw-items-center tw-justify-center tw-transition-all tw-duration-200"
+                    aria-label={`Remove ${item.label} tag`}
+                    title="Remove tag"
+                  >
+                    ×
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        )}
 
-                  return (
-<span
-  key={key}
-  className="tw-group tw-relative tw-bg-blue-100 tw-text-blue-800 tw-text-xs tw-font-medium tw-pl-2 tw-pr-2 tw-py-0.5 tw-rounded-sm tw-inline-flex tw-items-center tw-transition-all tw-duration-300 tw-w-auto tw-max-w-fit hover:tw-pr-6"
->
-  <span className="tw-whitespace-nowrap tw-overflow-hidden tw-text-ellipsis">
-    @{String(item.label)}
-  </span>
-
-  <button
-    onClick={() => onRemovePin?.(key)}
-    className="tw-absolute tw-top-1/2 tw-right-1 tw-translate-y-[-50%] tw-opacity-0 tw-scale-90 group-hover:tw-opacity-100 group-hover:tw-scale-100 tw-bg-blue-200/50  tw-text-red-500 hover:tw-bg-red-100 hover:tw-text-red-600 tw-text-xs tw-font-bold tw-rounded-full tw-w-4 tw-h-4 tw-flex tw-items-center tw-justify-center tw-transition-all tw-duration-300 tw-cursor-pointer tw-border-none"
-    aria-label={`Remove ${item.label} tag`}
-    title="Remove tag"
-  >
-    ×
-  </button>
-</span>
-
-
-
-
-                  );
-                })}
-            </div>
         {/* Main input container */}
-        <div className="tw-border tw-border-gray-300 tw-rounded-lg tw-bg-white tw-shadow-sm ">
+        <div className="tw-border tw-border-gray-300 tw-rounded-lg tw-bg-white tw-shadow-sm focus-within:tw-border-blue-500 focus-within:tw-ring-1 focus-within:tw-ring-blue-500">
           {/* Text input area */}
           <div className="tw-relative">
-          <div
-        className="tw-whitespace-pre-wrap tw-break-words tw-text-sm  tw-font-normal tw-p-3  tw-text-gray-900
-        tw-absolute tw-inset-0 tw-pointer-events-none tw-overflow-y-auto scrollbar-hide"
-        dangerouslySetInnerHTML={{ __html: getHighlightedText(text) }}
-      />
+            {/* Overlay for styled text */}
+            <div
+              ref={overlayRef}
+              className="  tw-absolute tw-inset-0 tw-p-3 tw-text-sm tw-font-normal tw-text-gray-900 tw-whitespace-pre-wrap tw-break-words tw-pointer-events-none tw-overflow-auto tw-resize-none"
+              style={{
+                minHeight: '44px',
+                maxHeight: '128px',
+                lineHeight: '1.5',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+              dangerouslySetInnerHTML={{ __html: getHighlightedText(text) }}
+            />
+            
+            {/* Hidden textarea */}
             <textarea
               ref={textareaRef}
               value={text}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              onScroll={handleScroll}
               placeholder={placeholder}
               disabled={disabled}
-            className=" ghost-textarea  tw-w-full tw-p-3    tw-resize-none tw-outline-none 
-               tw-text-sm  tw-max-h-32 
-               tw-text-transparent tw-bg-transparent tw-caret-black
-               placeholder:tw-text-gray-500 disabled:tw-bg-gray-100 
-               disabled:tw-text-gray-500 tw-selection:bg-blue-200"
+              className=" ghost-textarea tw-w-full tw-p-3 tw-resize-none tw-outline-none tw-text-sm tw-bg-transparent invisible-textarea"
+              style={{
+                color: 'transparent',
+                caretColor: 'black',
+                minHeight: '44px',
+                maxHeight: '128px',
+                lineHeight: '1.5',
+                fontFamily: 'inherit'
+              }}
               rows={1}
             />
 
-            {/* Send button inside textarea */}
+            {/* Send button */}
             <button
               onClick={handleSend}
               disabled={disabled || !text.trim()}
-              className="tw-absolute tw-right-2 tw-bottom-2 tw-h-10 tw-w-10 tw-rounded-full tw-bg-blue-500 tw-text-white hover:tw-bg-blue-600 disabled:tw-bg-gray-300 disabled:tw-cursor-not-allowed tw-transition-colors tw-border-none tw-flex tw-items-center tw-justify-center"
+              className="tw-absolute tw-right-2 tw-bottom-2 tw-h-8 tw-w-8 tw-rounded-full tw-bg-blue-500 tw-text-white hover:tw-bg-blue-600 disabled:tw-bg-gray-300 disabled:tw-cursor-not-allowed tw-transition-colors tw-border-none tw-flex tw-items-center tw-justify-center"
             >
               <IoIosSend />
             </button>
@@ -334,12 +392,14 @@ if (mentionItem.pinnable) {
           <div className="tw-absolute tw-bottom-full tw-left-0 tw-mb-1 tw-w-64 tw-max-h-48 tw-overflow-auto tw-bg-white tw-border tw-border-gray-300 tw-rounded-lg tw-shadow-lg tw-z-50">
             {suggestions.map((item, index) => (
               <div
-                key={item.value}
+                key={`${item.value}-${index}`}
+                ref={(el) => (suggestionRefs.current[index] = el)}
                 onMouseDown={(e) => {
-                  e.preventDefault(); // ✅ Prevent input blur
-                  insertMention(item.value); // ✅ Insert mention
+                  e.preventDefault();
+                  insertMention(item.value);
                 }}
-                className={`tw-px-3 tw-py-2 tw-cursor-pointer tw-flex tw-items-center ${
+                onMouseEnter={() => setActiveSuggestionIndex(index)}
+                className={`tw-px-3 tw-py-2 tw-cursor-pointer tw-flex tw-items-center tw-transition-colors ${
                   index === activeSuggestionIndex
                     ? "tw-bg-blue-100 tw-text-blue-800"
                     : "tw-text-gray-700 hover:tw-bg-gray-100"
@@ -349,6 +409,11 @@ if (mentionItem.pinnable) {
                   {item.label.charAt(0).toUpperCase()}
                 </span>
                 <span className="tw-font-medium">{item.label}</span>
+                {item.pinnable && (
+                  <span className="tw-ml-auto tw-text-xs tw-text-blue-600 tw-bg-blue-100 tw-px-1 tw-py-0.5 tw-rounded">
+                    Pin
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -357,7 +422,7 @@ if (mentionItem.pinnable) {
 
       {/* Help text */}
       <div className="tw-text-xs tw-text-gray-500 tw-mt-2 tw-text-center">
-        Type @ to mention someone • Enter to send • Shift+Enter for new line
+        Type @ to mention • Enter to send • Shift+Enter for new line
       </div>
     </div>
   );
