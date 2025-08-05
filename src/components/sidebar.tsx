@@ -13,8 +13,6 @@ type ChatItemProps = {
   isActive: boolean;
   onSelect: (id: string) => void;
   onOptions: (id: string) => void;
- 
-
 };
 
 function EmptyState() {
@@ -76,30 +74,36 @@ export function ChatSidebar({
   activeId,
   onSelectChat,
   onNewChat,
-  setShowModal,
+  onButtonClick,
+  children,
 }: {
   chats: Chat[];
   activeId: string;
   onSelectChat: (id: string) => void;
   onNewChat?: () => void;
-   setShowModal: (modal:boolean) => void;
+  onButtonClick: () => void;
+  children: React.ReactNode;
 }) {
   return (
-    <aside className=" tw-border-r tw-border-gray-200 tw-h-full tw-flex tw-flex-col">
-      {/* Header */}
-      <div className="tw-p-4 tw-border-b tw-border-gray-100">
+    <aside className="tw-border-r tw-border-gray-200 tw-h-full tw-flex tw-flex-col tw-relative">
+      {/* Header - Fixed positioning issue by ensuring proper stacking context */}
+      <div className="tw-p-4 tw-border-b tw-border-gray-100 tw-relative tw-z-10">
+        {/* Children container with proper z-index */}
+        <div className="tw-relative tw-z-20 tw-mb-3">
+          {children}
+        </div>
         <h2 className="tw-text-lg tw-font-semibold tw-text-gray-900 tw-mb-3">Conversations</h2>
         <ChatUIButton 
-        className="tw-w-full"
-        onClick={onNewChat}
+          className="tw-w-full"
+          onClick={onNewChat}
         >
-          <CiCirclePlus  />
-         New Chat
+          <CiCirclePlus />
+          New Chat
         </ChatUIButton>
       </div>
 
       {/* Chat List */}
-      <div className="tw-flex-1 tw-overflow-y-auto">
+      <div className="tw-flex-1 tw-overflow-y-auto tw-relative tw-z-0">
         {chats.length === 0 ? (
           <EmptyState />
         ) : (
@@ -122,15 +126,17 @@ export function ChatSidebar({
         )}
       </div>
 
-      <ChatUIButton
-      onClick={()=>setShowModal(true)}
-      className=""
-      variant="outline"
-      >
-        <RiSettings3Line size={18}/>
-        Setting
-      </ChatUIButton>
-      
+      {/* Footer */}
+      <div className="tw-p-4 tw-border-t tw-border-gray-100">
+        <ChatUIButton
+          onClick={onButtonClick}
+          className="tw-w-full"
+          variant="outline"
+        >
+          <RiSettings3Line size={18} />
+          Settings
+        </ChatUIButton>
+      </div>
     </aside>
   );
 }
