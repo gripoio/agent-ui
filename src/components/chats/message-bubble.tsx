@@ -2,7 +2,7 @@ import React from "react";
 import { Markdown } from "../../utils/markdownToReact.js"
 import { components } from "../../constant/index.js";
 import { ToolDisplay } from "./tool-display.js";
-import { LifecycleIndicator } from "./life-cycle-indicator.js";
+import { LifecycleIndicator, StageStatus } from "./life-cycle-indicator.js";
 import { ToolCall } from "../../types/chats.js";
 type MessageBubbleProps = {
   text: string;
@@ -10,7 +10,7 @@ type MessageBubbleProps = {
   timestamp?: string;
   className?: string;
 
-  stages?: Record<string, string>;
+  stages?: Record<string, StageStatus>;
   currentStage?: string;
   isProcessing?: boolean;
   showLifecycle?: boolean;
@@ -43,7 +43,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {!isUser && showLifecycle && stages && isProcessing && (
           <LifecycleIndicator
             stages={stages}
-            currentStage={currentStage}
             isProcessing={isProcessing}
           />
         )}
@@ -62,11 +61,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             </Markdown>
           </>
         )}
-        {timestamp && (
+        {/* {timestamp && (
           <span className="tw-block tw-mt-1 tw-text-xs tw-text-gray-400 tw-text-right">
             {timestamp}
           </span>
-        )}
+        )} */}
       </div>
     </div>
   );

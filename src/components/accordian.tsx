@@ -54,19 +54,24 @@ export function Accordion({
         </div>
       </button>
 
-      <div
-        className={`tw-overflow-hidden tw-transition-all tw-duration-200 ${
-          isOpen ? 'tw-max-h-[500px] tw-opacity-100' : 'tw-max-h-0 tw-opacity-0'
-        }`}
-      >
-        <div className={`
-          tw-px-3 tw-py-2.5 tw-border-t tw-border-gray-200
-        `}>
-          <div className={`${getTextStyle("small")} tw-text-gray-700`}>
-            {children}
-          </div>
-        </div>
-      </div>
+   <div
+  className={`tw-transition-all tw-duration-200 ${
+    isOpen
+      ? "tw-max-h-[500px] tw-opacity-100 tw-overflow-y-auto"
+      : "tw-max-h-0 tw-opacity-0 tw-overflow-hidden"
+  }`}
+>
+  <div
+    className={`
+      tw-px-3 tw-py-2.5 tw-border-t tw-border-gray-200
+    `}
+  >
+    <div className={`${getTextStyle("small")} tw-text-gray-700`}>
+      {children}
+    </div>
+  </div>
+</div>
+
     </div>
   );
 }

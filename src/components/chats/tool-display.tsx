@@ -6,7 +6,6 @@ import { HiOutlineClipboard, HiOutlineCheck } from "react-icons/hi";
 import { useState } from "react";
 import { Accordion } from "../accordian";
 import { ToolCall, ToolStatuses } from "../../types/chats";
-import { Markdown } from "../../utils/markdownToReact";
 import { getToolExecutionTime } from "../../utils/chats/tool-excution-time";
 
 interface ToolDisplayProps {
@@ -112,8 +111,6 @@ export function ToolDisplay({ toolCalls }: ToolDisplayProps) {
   if (toolCalls?.length === 0) {
     return null;
   }
-
-  console.log("Tool Calls:", toolCalls);
   
   return (
     <div className="tw-space-y-4 tw-mb-4">
