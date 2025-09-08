@@ -8,7 +8,7 @@ import { ChatUIButton } from "./button";
 
 export interface Chat {
   label: string;
-  value: string;
+  id: string;
 }
 
 type ChatObj = {
@@ -67,7 +67,7 @@ function ChatItem({ selectedChatId, chat, isActive, onSelect, onOptions }: ChatI
             }`}
           />
           <span
-            className={`tw-truncate tw-font-medium tw-text-sm tw-flex-1 tw-transition-colors tw-duration-200 ${
+            className={`tw-truncate tw-font-medium tw-text-lg tw-flex-1 tw-transition-colors tw-duration-200 ${
               isActive ? "tw-text-blue-900 tw-font-semibold" : "tw-text-gray-700"
             }`}
           >
@@ -81,7 +81,8 @@ function ChatItem({ selectedChatId, chat, isActive, onSelect, onOptions }: ChatI
             onClick={(e) => {
               e.stopPropagation();
               if (buttonRef.current) {
-                onOptions(chat.value, chat, buttonRef.current);
+                // ✅ Use selectedChatId instead of chat.?.id
+                onOptions(selectedChatId, chat, buttonRef.current);
               }
             }}
             className={`tw-p-1 tw-rounded tw-flex-shrink-0 tw-transition-colors tw-duration-200 ${
@@ -112,38 +113,43 @@ export function ChatSidebar({
   onSelectChat: (id: string, chat: Chat) => void;
   onNewChat?: () => void;
   onButtonClick: () => void;
-  onDeleteChat: (id: string) => void;
+  onDeleteChat: (id: string, chat: Chat) => void;
   children: React.ReactNode;
 }) {
-  const [menuChatId, setMenuChatId] = useState<string | null>(null);
+const [menuChat, setMenuChat] = useState<Chat | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [isOpen, setIsOpen] = useState(false);
 
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // handle options (open delete menu)
-  const handleOptions = (id: string, chat: Chat, buttonEl: HTMLButtonElement) => {
-    const rect = buttonEl.getBoundingClientRect();
-    setMenuPos({
-      top: rect.bottom + window.scrollY + 4,
-      left: rect.left + window.scrollX,
-    });
-    setMenuChatId((prev) => (prev === id ? null : id));
-  };
+const handleOptions = (id: string, chat: Chat, buttonEl: HTMLButtonElement) => {
+  const rect = buttonEl.getBoundingClientRect();
+  setMenuPos({
+    top: rect.bottom + window.scrollY + 4,
+    left: rect.left + window.scrollX,
+  });
+setMenuChat((prev) => (prev?.id === chat?.id ? null : chat))
+  setMenuChat(chat);
+};
 
   // Close when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuChatId) {
+      if (menuChat) {
         const target = event.target as Node;
-        if (!sidebarRef.current?.contains(target)) {
-          setMenuChatId(null);
+        if (
+          !sidebarRef.current?.contains(target) &&
+          !menuRef.current?.contains(target)
+        ) {
+          setMenuChat(null);
         }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuChatId]);
+  }, [menuChat]);
 
   return (
     <>
@@ -183,13 +189,13 @@ export function ChatSidebar({
                   Recent Chats
                 </span>
               </div>
-              <ul className="tw-space-y-2 tw-pt-4">
+              <ul className="tw-space-y-4 tw-pt-4">
                 {chats.chats.map((chat, index) => (
                   <ChatItem
-                    key={`${chat.value}-${index}`}
+                    key={`${chat?.id}-${index}`}
                     selectedChatId={chats.id}
                     chat={chat}
-                    isActive={chat.value === activeId}
+                    isActive={chat?.id === activeId}
                     onSelect={onSelectChat}
                     onOptions={handleOptions}
                   />
@@ -218,24 +224,32 @@ export function ChatSidebar({
       </button>
 
       {/* Floating Delete Menu rendered in Portal */}
-      {menuChatId &&
+      {menuChat&&
         createPortal(
           <div
-            className="tw-absolute tw-z-[10000] tw-bg-white tw-shadow-lg tw-rounded-lg tw-px-4 tw-py-6"
-
-            style={{  border:"2px solid #e5e7eb", top: menuPos.top, left: menuPos.left }}
+            ref={menuRef}
+            className="tw-fixed tw-bg-white tw-shadow-xl tw-rounded-lg tw-border tw-border-gray-200 tw-py-4 tw-px-4 tw-min-w-[140px]"
+            style={{
+              top: menuPos.top,
+              left: menuPos.left,
+              zIndex: 99999,
+            }}
           >
-            <ChatUIButton
-              onClick={() => {
-                onDeleteChat(menuChatId);
-                setMenuChatId(null);
-              }}
-              variant="destructive"
-              size="sm"
-            >
-              <CiTrash className="tw-w-4 tw-h-4" />
-              <span>Delete Chat</span>
-            </ChatUIButton>
+    <ChatUIButton
+  onClick={() => {
+    if (menuChat && menuChat) {
+      onDeleteChat(menuChat as unknown as string, menuChat);
+    }
+    setMenuChat(null);
+    setMenuChat(null);
+  }}
+  variant="destructive"
+  size="sm"
+>
+  <CiTrash className="tw-w-4 tw-h-4" />
+  <span>Delete Chat</span>
+</ChatUIButton>
+
           </div>,
           document.body
         )}
