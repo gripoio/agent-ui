@@ -3,16 +3,37 @@ import { IoCopyOutline } from "react-icons/io5";
 
 interface CodeBlockProps extends React.HTMLAttributes<HTMLElement> {
   children?: React.ReactNode;
-  node?: any; // 👈 added to avoid type error when passNode: true
+  node?: any; // 👈 avoid type error when passNode: true
 }
 
 export function CodeBlock({ children, className = "", ...props }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(children?.toString() || "");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const text = children?.toString() || "";
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        // ✅ Modern API (only works on HTTPS or localhost)
+        await navigator.clipboard.writeText(text);
+      } else {
+        // ⚡ Fallback for HTTP or unsupported browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed"; // avoid scroll jump
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
   };
 
   return (

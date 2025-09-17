@@ -121,20 +121,12 @@ export function ToolDisplay({ toolCalls }: ToolDisplayProps) {
         >
           <Accordion
             toolName={tool.name}
+            startTime={tool.meta.startTime}
+            endTime={tool.meta.endTime}
             status={tool.status}
+            isToolParent={true}
           >
             <div className="tw-space-y-4">
-              {/* Execution Time */}
-              <div className="tw-flex tw-items-center tw-gap-2 tw-text-sm tw-text-gray-600 tw-bg-gray-50 tw-px-3 tw-py-2 tw-rounded-lg tw-border tw-border-gray-200">
-                <svg className="tw-w-4 tw-h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>
-                  Executed in <span className="tw-font-semibold tw-text-gray-900">
-                    {getToolExecutionTime(tool.meta.startTime, tool.meta.endTime)}
-                  </span>
-                </span>
-              </div>
               
               {/* Arguments Section */}
               <div className="tw-space-y-3 tw-w-full">
