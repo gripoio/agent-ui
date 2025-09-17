@@ -168,7 +168,7 @@ setMenuChat((prev) => (prev?.id === chat?.id ? null : chat))
           <div className="tw-relative tw-z-20 tw-mb-3">{children}</div>
           <h2 className="tw-text-lg tw-font-semibold tw-text-gray-900 tw-mb-3">
             Conversations
-          </h2>
+          </h2>     
           <ChatUIButton
             className="tw-w-full tw-bg-blue-600 hover:tw-bg-blue-700 tw-text-white"
             onClick={onNewChat}

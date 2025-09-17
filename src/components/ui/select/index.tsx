@@ -11,7 +11,7 @@ function cn(...classes: (string | undefined | null | boolean)[]): string {
 }
 
 // Portal component for rendering outside DOM tree
-const Portal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+function Portal({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const Portal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (!mounted) return null;
   
   return createPortal(children, document.body);
-};
+}
 
 // Select Context
 interface SelectContextType {
@@ -55,7 +55,7 @@ interface SelectProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export const Select: React.FC<SelectProps> = ({
+export function Select({
   children,
   value: controlledValue,
   defaultValue = "",
@@ -63,7 +63,7 @@ export const Select: React.FC<SelectProps> = ({
   open: controlledOpen,
   defaultOpen = false,
   onOpenChange,
-}) => {
+}: SelectProps) {
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
@@ -99,7 +99,7 @@ export const Select: React.FC<SelectProps> = ({
       {children}
     </SelectContext.Provider>
   );
-};
+}
 
 // Select Trigger
 interface SelectTriggerProps {
@@ -108,11 +108,11 @@ interface SelectTriggerProps {
   placeholder?: string;
 }
 
-export const SelectTrigger: React.FC<SelectTriggerProps> = ({
+export function SelectTrigger({
   children,
   className,
   placeholder = "Select an option...",
-}) => {
+}: SelectTriggerProps) {
   const { open, value, onOpenChange, setTriggerRect } = useSelect();
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -164,7 +164,7 @@ export const SelectTrigger: React.FC<SelectTriggerProps> = ({
       />
     </button>
   );
-};
+}
 
 // Select Value
 interface SelectValueProps {
@@ -173,11 +173,11 @@ interface SelectValueProps {
   children?: React.ReactNode | string;
 }
 
-export const SelectValue: React.FC<SelectValueProps> = ({
+export function SelectValue({
   placeholder = "Select an option...",
   className,
   children,
-}) => {
+}: SelectValueProps) {
   const { value } = useSelect();
 
   return (
@@ -185,7 +185,7 @@ export const SelectValue: React.FC<SelectValueProps> = ({
       {children || placeholder}
     </span>
   );
-};
+}
 
 // Select Content - IMPROVED POSITIONING AND Z-INDEX
 interface SelectContentProps {
@@ -193,10 +193,10 @@ interface SelectContentProps {
   className?: string;
 }
 
-export const SelectContent: React.FC<SelectContentProps> = ({
+export function SelectContent({
   children,
   className,
-}) => {
+}: SelectContentProps) {
   const { open, onOpenChange, triggerRect } = useSelect();
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -302,7 +302,7 @@ export const SelectContent: React.FC<SelectContentProps> = ({
       </div>
     </Portal>
   );
-};
+}
 
 // Select Item
 interface SelectItemProps {
@@ -312,12 +312,12 @@ interface SelectItemProps {
   disabled?: boolean;
 }
 
-export const SelectItem: React.FC<SelectItemProps> = ({
+export function SelectItem({
   children,
   value: itemValue,
   className,
   disabled = false,
-}) => {
+}: SelectItemProps) {
   const { value, onValueChange, onOpenChange } = useSelect();
   const isSelected = value === itemValue;
 
@@ -359,7 +359,7 @@ export const SelectItem: React.FC<SelectItemProps> = ({
       <span className="tw-truncate">{children}</span>
     </div>
   );
-};
+}
 
 // Select Label
 interface SelectLabelProps {
@@ -367,22 +367,26 @@ interface SelectLabelProps {
   className?: string;
 }
 
-export const SelectLabel: React.FC<SelectLabelProps> = ({ children, className }) => (
-  <div
-    className={cn(
-      "tw-py-1.5 tw-pl-8 tw-pr-2 tw-text-sm tw-font-semibold tw-text-gray-900",
-      className
-    )}
-  >
-    {children}
-  </div>
-);
+export function SelectLabel({ children, className }: SelectLabelProps) {
+  return (
+    <div
+      className={cn(
+        "tw-py-1.5 tw-pl-8 tw-pr-2 tw-text-sm tw-font-semibold tw-text-gray-900",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
 
 // Select Separator
 interface SelectSeparatorProps {
   className?: string;
 }
 
-export const SelectSeparator: React.FC<SelectSeparatorProps> = ({ className }) => (
-  <div className={cn("-tw-mx-1 tw-my-1 tw-h-px tw-bg-gray-200", className)} />
-);
+export function SelectSeparator({ className }: SelectSeparatorProps) {
+  return (
+    <div className={cn("-tw-mx-1 tw-my-1 tw-h-px tw-bg-gray-200", className)} />
+  );
+}

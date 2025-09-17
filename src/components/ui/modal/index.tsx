@@ -26,7 +26,7 @@ const useModal = () => {
 };
 
 // Hook for handling escape key and outside clicks
-const useModalInteractions = (onClose: () => void, triggerRef?: React.RefObject<HTMLElement>) => {
+const useModalInteractions = (onClose: () => void, triggerRef?: React.RefObject<any>) => {
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -59,7 +59,7 @@ interface PortalProps {
   container?: HTMLElement;
 }
 
-const Portal: React.FC<PortalProps> = ({ children, container }) => {
+function Portal({ children, container }: PortalProps) {
   const [mounted, setMounted] = React.useState(false);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ const Portal: React.FC<PortalProps> = ({ children, container }) => {
     children,
     container || document.body
   );
-};
+}
 
 // Main Modal component
 interface ModalProps {
@@ -82,12 +82,12 @@ interface ModalProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export const Modal: React.FC<ModalProps> = ({
+export function Modal({
   children,
   open: controlledOpen,
   defaultOpen = false,
   onOpenChange,
-}) => {
+}: ModalProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen);
   
   const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
@@ -98,7 +98,7 @@ export const Modal: React.FC<ModalProps> = ({
       {children}
     </ModalContext.Provider>
   );
-};
+}
 
 // Modal Trigger
 interface ModalTriggerProps {
@@ -107,21 +107,21 @@ interface ModalTriggerProps {
   className?: string;
 }
 
-export const ModalTrigger: React.FC<ModalTriggerProps> = ({
+export function ModalTrigger({
   children,
   asChild = false,
   className,
-}) => {
+}: ModalTriggerProps) {
   const { onOpenChange } = useModal();
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<any>(null);
 
   const handleClick = () => {
     onOpenChange(true);
   };
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, {
-      ...children.props,
+    return React.cloneElement(children as React.ReactElement<any>, {
+      ...(children.props || {}),
       ref: triggerRef,
       onClick: handleClick,
     });
@@ -136,7 +136,7 @@ export const ModalTrigger: React.FC<ModalTriggerProps> = ({
       {children}
     </button>
   );
-};
+}
 
 // Modal Portal
 interface ModalPortalProps {
@@ -144,9 +144,9 @@ interface ModalPortalProps {
   container?: HTMLElement;
 }
 
-export const ModalPortal: React.FC<ModalPortalProps> = ({ children, container }) => {
+export function ModalPortal({ children, container }: ModalPortalProps) {
   return <Portal container={container}>{children}</Portal>;
-};
+}
 
 // Modal Overlay - FIXED with higher z-index
 interface ModalOverlayProps {
@@ -154,10 +154,10 @@ interface ModalOverlayProps {
   children?: React.ReactNode;
 }
 
-export const ModalOverlay: React.FC<ModalOverlayProps> = ({
+export function ModalOverlay({
   className,
   children,
-}) => {
+}: ModalOverlayProps) {
   const { onOpenChange } = useModal();
 
   return (
@@ -172,7 +172,7 @@ export const ModalOverlay: React.FC<ModalOverlayProps> = ({
       {children}
     </div>
   );
-};
+}
 
 // Modal Content - FIXED with concrete colors and higher z-index
 interface ModalContentProps {
@@ -182,15 +182,15 @@ interface ModalContentProps {
   onPointerDownOutside?: (event: PointerEvent) => void;
 }
 
-export const ModalContent: React.FC<ModalContentProps> = ({
+export function ModalContent({
   children,
   className,
   onEscapeKeyDown,
   onPointerDownOutside,
-}) => {
+}: ModalContentProps) {
   const { open, onOpenChange } = useModal();
   const contentRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLElement>(null);
+  const triggerRef = useRef<any>(null);
 
   useModalInteractions(() => {
     onEscapeKeyDown?.(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -219,7 +219,7 @@ export const ModalContent: React.FC<ModalContentProps> = ({
       </div>
     </ModalPortal>
   );
-};
+}
 
 // Modal Header
 interface ModalHeaderProps {
@@ -227,10 +227,10 @@ interface ModalHeaderProps {
   className?: string;
 }
 
-export const ModalHeader: React.FC<ModalHeaderProps> = ({
+export function ModalHeader({
   children,
   className,
-}) => {
+}: ModalHeaderProps) {
   return (
     <div
       className={cn(
@@ -241,7 +241,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
       {children}
     </div>
   );
-};
+}
 
 // Modal Footer
 interface ModalFooterProps {
@@ -249,10 +249,10 @@ interface ModalFooterProps {
   className?: string;
 }
 
-export const ModalFooter: React.FC<ModalFooterProps> = ({
+export function ModalFooter({
   children,
   className,
-}) => {
+}: ModalFooterProps) {
   return (
     <div
       className={cn(
@@ -263,7 +263,7 @@ export const ModalFooter: React.FC<ModalFooterProps> = ({
       {children}
     </div>
   );
-};
+}
 
 // Modal Title - FIXED with concrete colors
 interface ModalTitleProps {
@@ -271,10 +271,10 @@ interface ModalTitleProps {
   className?: string;
 }
 
-export const ModalTitle: React.FC<ModalTitleProps> = ({
+export function ModalTitle({
   children,
   className,
-}) => {
+}: ModalTitleProps) {
   return (
     <h2
       className={cn(
@@ -285,7 +285,7 @@ export const ModalTitle: React.FC<ModalTitleProps> = ({
       {children}
     </h2>
   );
-};
+}
 
 // Modal Description - FIXED with concrete colors
 interface ModalDescriptionProps {
@@ -293,10 +293,10 @@ interface ModalDescriptionProps {
   className?: string;
 }
 
-export const ModalDescription: React.FC<ModalDescriptionProps> = ({
+export function ModalDescription({
   children,
   className,
-}) => {
+}: ModalDescriptionProps) {
   return (
     <p
       className={cn(
@@ -307,7 +307,7 @@ export const ModalDescription: React.FC<ModalDescriptionProps> = ({
       {children}
     </p>
   );
-};
+}
 
 // Modal Close Button - FIXED with concrete colors
 interface ModalCloseProps {
@@ -316,11 +316,11 @@ interface ModalCloseProps {
   asChild?: boolean;
 }
 
-export const ModalClose: React.FC<ModalCloseProps> = ({
+export function ModalClose({
   children,
   className,
   asChild = false,
-}) => {
+}: ModalCloseProps) {
   const { onOpenChange } = useModal();
 
   const handleClick = () => {
@@ -328,8 +328,8 @@ export const ModalClose: React.FC<ModalCloseProps> = ({
   };
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, {
-      ...children.props,
+    return React.cloneElement(children as React.ReactElement<any>, {
+      ...(children.props || {}),
       onClick: handleClick,
     });
   }
@@ -362,4 +362,4 @@ export const ModalClose: React.FC<ModalCloseProps> = ({
       <span className="tw-sr-only">Close</span>
     </button>
   );
-};
+}

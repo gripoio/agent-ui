@@ -48,9 +48,7 @@ interface ChatInputProps {
   onRemovePin?: (type: string) => void;
 }
 
-
-
-export  function ChatInput({
+export function ChatInput({
   onSend,
   mentions = [],
   onMentionSelect,
@@ -67,7 +65,7 @@ export  function ChatInput({
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
   const [mentionStart, setMentionStart] = useState<number | null>(null);
   const [cursorPosition, setCursorPosition] = useState(0);
-  
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const suggestionRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -76,9 +74,9 @@ export  function ChatInput({
   const adjustTextareaHeight = useCallback(() => {
     const textarea = textareaRef.current;
     const overlay = overlayRef.current;
-    
+
     if (textarea && overlay) {
-      textarea.style.height = 'auto';
+      textarea.style.height = "auto";
       const scrollHeight = Math.min(textarea.scrollHeight, 128); // max-height equivalent
       textarea.style.height = `${scrollHeight}px`;
       overlay.style.height = `${scrollHeight}px`;
@@ -89,7 +87,7 @@ export  function ChatInput({
   const syncScroll = useCallback(() => {
     const textarea = textareaRef.current;
     const overlay = overlayRef.current;
-    
+
     if (textarea && overlay) {
       overlay.scrollTop = textarea.scrollTop;
       overlay.scrollLeft = textarea.scrollLeft;
@@ -103,7 +101,7 @@ export  function ChatInput({
 
     setText(value);
     setCursorPosition(cursorPos);
-    
+
     // Adjust height and sync scroll
     setTimeout(() => {
       adjustTextareaHeight();
@@ -121,7 +119,7 @@ export  function ChatInput({
   // Check for @ mentions
   const checkForMentions = (text: string, cursorPos: number) => {
     let mentionIndex = -1;
-    
+
     for (let i = cursorPos - 1; i >= 0; i--) {
       if (text[i] === "@") {
         if (i === 0 || text[i - 1] === " " || text[i - 1] === "\n") {
@@ -160,8 +158,8 @@ export  function ChatInput({
     const suggestionElement = suggestionRefs.current[index];
     if (suggestionElement) {
       suggestionElement.scrollIntoView({
-        block: 'nearest',
-        behavior: 'smooth'
+        block: "nearest",
+        behavior: "smooth",
       });
     }
   };
@@ -170,7 +168,7 @@ export  function ChatInput({
   const insertMention = useCallback(
     (mentionValue: string) => {
       if (mentionStart === null) return;
-      
+
       const mentionItem = suggestions.find((s) => s.value === mentionValue);
       if (!mentionItem) return;
 
@@ -221,7 +219,14 @@ export  function ChatInput({
         }
       }, 0);
     },
-    [text, cursorPosition, mentionStart, suggestions, onMentionSelect, adjustTextareaHeight]
+    [
+      text,
+      cursorPosition,
+      mentionStart,
+      suggestions,
+      onMentionSelect,
+      adjustTextareaHeight,
+    ]
   );
 
   // Handle keyboard events
@@ -230,28 +235,30 @@ export  function ChatInput({
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          const nextIndex = activeSuggestionIndex < suggestions.length - 1 
-            ? activeSuggestionIndex + 1 
-            : 0;
+          const nextIndex =
+            activeSuggestionIndex < suggestions.length - 1
+              ? activeSuggestionIndex + 1
+              : 0;
           setActiveSuggestionIndex(nextIndex);
           scrollSuggestionIntoView(nextIndex);
           break;
-          
+
         case "ArrowUp":
           e.preventDefault();
-          const prevIndex = activeSuggestionIndex > 0 
-            ? activeSuggestionIndex - 1 
-            : suggestions.length - 1;
+          const prevIndex =
+            activeSuggestionIndex > 0
+              ? activeSuggestionIndex - 1
+              : suggestions.length - 1;
           setActiveSuggestionIndex(prevIndex);
           scrollSuggestionIntoView(prevIndex);
           break;
-          
+
         case "Enter":
         case "Tab":
           e.preventDefault();
           insertMention(suggestions[activeSuggestionIndex].value);
           break;
-          
+
         case "Escape":
           e.preventDefault();
           setShowSuggestions(false);
@@ -280,7 +287,10 @@ export  function ChatInput({
 
   // Initialize refs for suggestions
   useEffect(() => {
-    suggestionRefs.current = suggestionRefs.current.slice(0, suggestions.length);
+    suggestionRefs.current = suggestionRefs.current.slice(
+      0,
+      suggestions.length
+    );
   }, [suggestions.length]);
 
   // Adjust height on mount
@@ -326,15 +336,15 @@ export  function ChatInput({
               ref={overlayRef}
               className="  tw-absolute tw-inset-0 tw-p-3 tw-text-sm tw-font-normal tw-text-gray-900 tw-whitespace-pre-wrap tw-break-words tw-pointer-events-none tw-overflow-auto tw-resize-none"
               style={{
-                minHeight: '44px',
-                maxHeight: '128px',
-                lineHeight: '1.5',
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word'
+                minHeight: "44px",
+                maxHeight: "128px",
+                lineHeight: "1.5",
+                wordWrap: "break-word",
+                overflowWrap: "break-word",
               }}
               dangerouslySetInnerHTML={{ __html: getHighlightedText(text) }}
             />
-            
+
             {/* Hidden textarea */}
             <textarea
               ref={textareaRef}
@@ -346,12 +356,12 @@ export  function ChatInput({
               disabled={disabled}
               className=" ghost-textarea tw-w-full tw-p-3 tw-resize-none tw-outline-none tw-text-sm tw-bg-transparent invisible-textarea"
               style={{
-                color: 'transparent',
-                caretColor: 'black',
-                minHeight: '44px',
-                maxHeight: '128px',
-                lineHeight: '1.5',
-                fontFamily: 'inherit'
+                color: "transparent",
+                caretColor: "black",
+                minHeight: "44px",
+                maxHeight: "128px",
+                lineHeight: "1.5",
+                fontFamily: "inherit",
               }}
               rows={1}
             />
@@ -393,7 +403,9 @@ export  function ChatInput({
             {suggestions.map((item, index) => (
               <div
                 key={`${item.value}-${index}`}
-                ref={(el) => (suggestionRefs.current[index] = el)}
+                ref={(el) => {
+                  suggestionRefs.current[index] = el;
+                }}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   insertMention(item.value);
